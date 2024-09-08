@@ -2,13 +2,50 @@ import re
 import json
 from krita import *
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QLineEdit, QPushButton
+class LayerName:
+    
+    layer_name = ''
 
-# Número máximo de intentos de obtener una combinación no generada previamente.
-MAX_ATTEMPTS_TO_GET_A_NEW_COMBINATION = 1000
+    def __init__(self, layer_name):
+        self.layer_name = layer_name
 
-# Número máximo de combinaciones que se pueden contar. A partir de este número no se informará
-# de las combinaciones válidas.
-MAX_VALID_COMBINATIONS_TO_COUNT = 500
+    
+    def extract_cats(self):
+        """ Extrae las categorías a las que pertenece una capa. 
+        Las categorías están definidas en el nombre de la capa, con el formato:
+        <nombre arbitrario>#<título categoría 1>:<valor categoría 1>|<título categoría 2>:<valor categoría 2>|...
+        Añade el resultado a un diccionario en la siguiente forma:
+        {
+            <título categoría 1>: <valor categoría 1>,
+            <título categoría 2>: <valor categoría 2>
+        }
+
+        layer_name : str 
+            Nombre de la capa, con el formato previsto.
+        cats : array
+            Objeto al que se añadirán las categorías.
+        """
+    
+        cats = {}
+        if '#' in self.layer_name:
+            name_cats = self.layer_name.split('#').pop().split('|')
+            for name_cat in name_cats:
+                name_cat_parts = name_cat.split(':')
+                cats[name_cat_parts[0]] = name_cat_parts[1]
+
+        return cats
+
+
+    def extract_brackets_content(self):
+        result = re.findall(r'\[(.*?)\]', self.layer_name)
+        if len(result) > 0:
+            # Devuelve el texto entre corchetes
+            return result[0]
+        else:
+            # Si no se encuentra texto entre corchetes, devuelve None
+            return None
+
+
 
 class CombinationCounter:
 
@@ -69,54 +106,12 @@ class CombinationCounter:
         return json.dumps(self.groups)
 
 
+# Número máximo de intentos de obtener una combinación no generada previamente.
+MAX_ATTEMPTS_TO_GET_A_NEW_COMBINATION = 1000
 
-# -----------------------------------------------------
-
-class LayerName:
-    
-    layer_name = ''
-
-    def __init__(self, layer_name):
-        self.layer_name = layer_name
-
-    
-    def extract_cats(self):
-        """ Extrae las categorías a las que pertenece una capa. 
-        Las categorías están definidas en el nombre de la capa, con el formato:
-        <nombre arbitrario>#<título categoría 1>:<valor categoría 1>|<título categoría 2>:<valor categoría 2>|...
-        Añade el resultado a un diccionario en la siguiente forma:
-        {
-            <título categoría 1>: <valor categoría 1>,
-            <título categoría 2>: <valor categoría 2>
-        }
-
-        layer_name : str 
-            Nombre de la capa, con el formato previsto.
-        cats : array
-            Objeto al que se añadirán las categorías.
-        """
-    
-        cats = {}
-        if '#' in self.layer_name:
-            name_cats = self.layer_name.split('#').pop().split('|')
-            for name_cat in name_cats:
-                name_cat_parts = name_cat.split(':')
-                cats[name_cat_parts[0]] = name_cat_parts[1]
-
-        return cats
-
-
-    def extract_brackets_content(self):
-        result = re.findall(r'\[(.*?)\]', self.layer_name)
-        if len(result) > 0:
-            # Devuelve el texto entre corchetes
-            return result[0]
-        else:
-            # Si no se encuentra texto entre corchetes, devuelve None
-            return None
-
-
-# -----------------------------------------------------
+# Número máximo de combinaciones que se pueden contar. A partir de este número no se informará
+# de las combinaciones válidas.
+MAX_VALID_COMBINATIONS_TO_COUNT = 500
 
 def show_options_dialog():
     
@@ -154,6 +149,7 @@ def main():
     print('cat2: ' + combination_counter.groups[3]['layers'][2]['layer_name'])
 
     print('compatible? ' + str(compatible))
+
 
 
 
